@@ -1,0 +1,25 @@
+# Verstecke Konfig-Dateien
+<Files ~ "^\.user\.ini$">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Logs-Ordner komplett sperren
+<DirectoryMatch "^.*/logs/">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
+
+# Kein Directory Listing
+Options -Indexes
+
+# Nur PHP ausführen
+<FilesMatch "\.(php|phtml)$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Uploads: Keine Skripte ausführen
+<Directory uploads/>
+    php_flag engine off
+    Options -ExecCGI
+</Directory>
