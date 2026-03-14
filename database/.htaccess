@@ -1,0 +1,5 @@
+# CUMU – database/.htaccess
+# Block all HTTP access to this directory.
+# The SQLite database file must never be downloadable.
+
+Require all denied
