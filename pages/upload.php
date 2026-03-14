@@ -2,134 +2,140 @@
 require_once __DIR__ . '/../backend/session.php';
 require_once __DIR__ . '/../backend/layout.php';
 requireLogin();
-$b=BASE_URL;
-layoutHead('Upload Music');
+$b = BASE_URL;
+adminHead('Upload Music', 'upload');
 ?>
-<div class="app-wrap">
-<?php layoutSidebar('upload');?>
-<div class="main-content">
-  <header class="page-header"><h1 class="page-title">Upload Music</h1></header>
-  <main class="page-body">
 
-    <div style="max-width:560px">
-      <!-- Metadata -->
-      <div style="margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="form-group" style="margin-bottom:0">
-          <label>Artist name</label>
-          <input type="text" id="up-artist" placeholder="e.g. Kraftwerk" maxlength="100">
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label>Album name</label>
-          <input type="text" id="up-album" placeholder="e.g. Autobahn" maxlength="100">
-        </div>
+<div style="max-width:600px">
+
+  <!-- Metadata fallback -->
+  <div class="admin-card" style="margin-bottom:20px">
+    <div class="admin-card-head">Fallback Metadata</div>
+    <div style="padding:16px 20px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group" style="margin:0">
+        <label>Artist (if no ID3 tag)</label>
+        <input type="text" id="up-artist" placeholder="Unknown Artist" maxlength="100">
       </div>
-
-      <!-- Drop zone -->
-      <div id="drop-zone" style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg-subtle);margin-bottom:20px">
-        <div id="dz-inner">
-          <div style="margin-bottom:12px;color:var(--text-faint)"><?=icon('upload')?></div>
-          <div style="font-size:15px;font-weight:600;color:var(--text-muted);margin-bottom:6px">Drop audio files here</div>
-          <div style="font-size:13px;color:var(--text-faint);margin-bottom:16px">MP3, FLAC, OGG, WAV, M4A, AAC · Max 100 MB each</div>
-          <label class="btn btn-secondary" style="width:auto;cursor:pointer">
-            Browse files
-            <input type="file" id="file-input" multiple accept=".mp3,.flac,.ogg,.wav,.m4a,.aac,.opus" style="display:none">
-          </label>
-        </div>
+      <div class="form-group" style="margin:0">
+        <label>Album (if no ID3 tag)</label>
+        <input type="text" id="up-album" placeholder="Unknown Album" maxlength="100">
       </div>
-
-      <!-- File list -->
-      <div id="file-list" style="margin-bottom:16px"></div>
-
-      <!-- Upload button -->
-      <button class="btn btn-primary" id="upload-btn" disabled style="opacity:.5">Upload</button>
-
-      <!-- Progress / results -->
-      <div id="upload-results" style="margin-top:20px"></div>
     </div>
+    <div style="padding:0 20px 16px;font-size:13px;color:var(--tf)">
+      ID3 tags in the files are read automatically and take priority over the values above.
+    </div>
+  </div>
 
-  </main>
+  <!-- Drop zone -->
+  <div id="drop-zone" style="border:2px dashed var(--border-m);border-radius:var(--rl);padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg-el);margin-bottom:16px">
+    <div style="margin-bottom:14px;color:var(--tf)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">Drop audio files here</div>
+    <div style="font-size:13px;color:var(--tf);margin-bottom:18px">MP3, FLAC, OGG, WAV, M4A, AAC · Max 100 MB per file</div>
+    <label class="btn btn-secondary" style="width:auto;cursor:pointer;display:inline-flex">
+      Browse files
+      <input type="file" id="file-input" multiple accept=".mp3,.flac,.ogg,.wav,.m4a,.aac,.opus" style="display:none">
+    </label>
+  </div>
+
+  <!-- File list -->
+  <div id="file-list"></div>
+
+  <!-- Upload button -->
+  <button class="btn btn-primary" id="upload-btn" disabled style="margin-top:4px;opacity:.4">
+    Upload
+  </button>
+
+  <!-- Results -->
+  <div id="upload-results" style="margin-top:20px"></div>
+
 </div>
-<?php layoutPlayerBar();?>
-</div>
+
 <style>
-#drop-zone.over{border-color:var(--accent);background:var(--accent-soft);}
-.file-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;font-size:13.5px}
-.file-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.file-item-size{color:var(--text-faint);flex-shrink:0}
-.file-item-status{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.upload-ok{color:#166534}.upload-err{color:#991B1B}
-.prog-bar{height:3px;background:var(--bg-muted);border-radius:2px;margin-top:16px;overflow:hidden}
+#drop-zone.over{border-color:var(--accent);background:rgba(30,215,96,.05)}
+.f-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;font-size:13.5px}
+.f-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.f-size{color:var(--tf);flex-shrink:0;font-size:12px}
+.f-tag{flex-shrink:0;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(30,215,96,.12);color:var(--accent)}
+.f-err{background:rgba(255,82,82,.12);color:#ff8080}
+.prog{height:3px;background:var(--bg-hover);border-radius:2px;margin-top:12px;overflow:hidden}
 .prog-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .3s}
 </style>
+
 <script>
-const dz=document.getElementById('drop-zone');
-const fi=document.getElementById('file-input');
-const fl=document.getElementById('file-list');
-const ub=document.getElementById('upload-btn');
+const dz=document.getElementById('drop-zone'),fi=document.getElementById('file-input'),fl=document.getElementById('file-list'),ub=document.getElementById('upload-btn');
 let files=[];
+const fmt=b=>b<1048576?(b/1024).toFixed(0)+'KB':(b/1048576).toFixed(1)+'MB';
 
-function fmtSize(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
+function render(){
+  fl.innerHTML=files.map((f,i)=>`
+    <div class="f-item" id="fi-${i}">
+      <div class="f-name">${f.name}</div>
+      <div class="f-size">${fmt(f.size)}</div>
+    </div>`).join('');
+  ub.disabled=!files.length;
+  ub.style.opacity=files.length?'1':'.4';
+}
 
-function renderList(){
-  fl.innerHTML='';
-  files.forEach((f,i)=>{
-    fl.innerHTML+=`<div class="file-item" id="fi-${i}">
-      <div class="file-item-status" id="fs-${i}"></div>
-      <div class="file-item-name">${f.name}</div>
-      <div class="file-item-size">${fmtSize(f.size)}</div>
-    </div>`;
+function addFiles(list){
+  Array.from(list).forEach(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    if(['mp3','flac','ogg','wav','m4a','aac','opus'].includes(ext)&&!files.find(x=>x.name===f.name&&x.size===f.size))
+      files.push(f);
   });
-  ub.disabled=files.length===0;
-  ub.style.opacity=files.length?'1':'0.5';
+  render();
 }
 
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
 dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');addFiles(e.dataTransfer.files);});
-dz.addEventListener('click',()=>fi.click());
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');addFiles(e.dataTransfer.files)});
+dz.addEventListener('click',e=>{if(!e.target.closest('label'))fi.click()});
 fi.addEventListener('change',()=>addFiles(fi.files));
-
-function addFiles(flist){
-  Array.from(flist).forEach(f=>{if(!files.find(x=>x.name===f.name&&x.size===f.size))files.push(f);});
-  renderList();
-}
 
 ub.addEventListener('click',async()=>{
   if(!files.length)return;
-  ub.disabled=true;ub.textContent='Uploading...';
+  ub.disabled=true; ub.textContent='Uploading…';
   const res=document.getElementById('upload-results');
-  res.innerHTML='<div class="prog-bar"><div class="prog-fill" id="pb"></div></div>';
-  const pb=document.getElementById('pb');
+  res.innerHTML='<div class="prog"><div class="prog-fill" id="pb"></div></div>';
 
   const fd=new FormData();
   files.forEach(f=>fd.append('files[]',f));
   fd.append('artist',document.getElementById('up-artist').value.trim()||'Unknown Artist');
   fd.append('album', document.getElementById('up-album').value.trim()||'Unknown Album');
 
-  try {
-    const xhr=new XMLHttpRequest();
-    xhr.open('POST',window.CUMU_BASE+'/backend/upload_api.php');
-    xhr.upload.onprogress=e=>{if(e.lengthComputable)pb.style.width=(e.loaded/e.total*100)+'%';};
-    xhr.onload=()=>{
-      pb.style.width='100%';
+  const xhr=new XMLHttpRequest();
+  xhr.open('POST',window.CUMU_BASE+'/backend/upload_api.php');
+
+  xhr.upload.onprogress=e=>{
+    if(e.lengthComputable) document.getElementById('pb').style.width=(e.loaded/e.total*100)+'%';
+  };
+
+  xhr.onload=()=>{
+    document.getElementById('pb').style.width='100%';
+    try{
       const d=JSON.parse(xhr.responseText);
       let html='';
       if(d.ok){
-        d.data.uploaded.forEach(u=>{html+=`<div class="file-item"><div class="file-item-status upload-ok"><?=icon('check')?></div><div class="file-item-name">${u.name}</div><div class="file-item-size" style="color:#166534">Uploaded</div></div>`;});
-        d.data.errors.forEach(e=>{html+=`<div class="file-item"><div class="file-item-status upload-err">✕</div><div class="file-item-name">${e}</div></div>`;});
-      } else {
+        d.data.uploaded.forEach(u=>{
+          html+=`<div class="f-item"><div class="f-name"><strong>${u.title}</strong></div><div class="f-size">${u.artist}</div><div class="f-tag">Uploaded</div></div>`;
+        });
+        d.data.errors.forEach(e=>{
+          html+=`<div class="f-item"><div class="f-name" style="color:#ff8080">${e}</div></div>`;
+        });
+        if(d.data.uploaded.length>0){files=[];render();}
+      }else{
         html=`<div class="alert alert-error">${d.error}</div>`;
       }
       res.innerHTML='<div style="margin-top:12px">'+html+'</div>';
-      if(d.ok&&d.data.uploaded.length>0){files=[];renderList();}
-      ub.disabled=false;ub.textContent='Upload';
-    };
-    xhr.onerror=()=>{res.innerHTML='<div class="alert alert-error">Network error.</div>';ub.disabled=false;ub.textContent='Upload';};
-    xhr.send(fd);
-  } catch(e) {
-    res.innerHTML='<div class="alert alert-error">'+e.message+'</div>';
-    ub.disabled=false;ub.textContent='Upload';
-  }
+    }catch(e){
+      res.innerHTML='<div class="alert alert-error">Parse error</div>';
+    }
+    ub.disabled=false; ub.textContent='Upload';
+  };
+  xhr.onerror=()=>{res.innerHTML='<div class="alert alert-error">Network error.</div>';ub.disabled=false;ub.textContent='Upload';};
+  xhr.send(fd);
 });
 </script>
-</body></html>
+
+<?php adminFoot(); ?>
