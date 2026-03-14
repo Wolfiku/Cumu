@@ -1,5 +1,0 @@
-# CUMU – music/.htaccess
-# Prevent direct browser access to music files.
-# All audio is served through backend/stream.php which enforces authentication.
-
-Require all denied
