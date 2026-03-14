@@ -1,0 +1,22 @@
+# CUMU – Root .htaccess
+# Handles URL routing and security headers.
+
+Options -Indexes
+
+# ── Security headers ─────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── Deny direct access to sensitive directories ───────────────────────────────
+<FilesMatch "\.(db|sqlite|sqlite3)$">
+    Require all denied
+</FilesMatch>
+
+# Block access to PHP files in the database directory
+<FilesMatch "^database/">
+    Require all denied
+</FilesMatch>
