@@ -9,8 +9,26 @@
 if (!defined('BASE_URL')) require_once __DIR__ . '/../config.php';
 
 function appOpen(string $title): void {
-    $b = BASE_URL;
-?><!DOCTYPE html>
+    $b       = BASE_URL;
+    $inFrame = !empty($_GET['frame']);
+    if ($inFrame): ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><?php echo h($title); ?> – Cumu</title>
+  <link rel="stylesheet" href="<?php echo $b; ?>/style.css">
+  <style>
+    html,body{height:100%;overflow-x:hidden;background:var(--bg);margin:0}
+    body{padding-bottom:8px}
+  </style>
+</head>
+<body>
+<script>window.CUMU_BASE=<?php echo json_encode($b); ?>;</script>
+<div class="page-enter">
+<?php else: ?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -19,21 +37,21 @@ function appOpen(string $title): void {
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title><?php echo h($title); ?> – Cumu</title>
   <link rel="stylesheet" href="<?php echo $b; ?>/style.css">
+  <link rel="stylesheet" href="<?php echo $b; ?>/player.css">
 </head>
 <body>
 <script>window.CUMU_BASE=<?php echo json_encode($b); ?>;</script>
 <div class="app-shell">
-<div class="page-content page-enter" id="page-content" style="padding-bottom:16px">
-<?php }
+<div class="page-content page-enter" id="page-content">
+<?php endif; }
 
 function appClose(string $activeTab = 'home'): void {
     $b        = BASE_URL;
     $isAdmin  = isAdmin()     ? 'true' : 'false';
     $isPub    = isPublisher() ? 'true' : 'false';
-?>
-</div><!-- /page-content -->
-</div><!-- /app-shell -->
-
+    $inFrame  = !empty($_GET['frame']);
+    if ($inFrame): ?>
+</div><!-- /page-enter -->
 <script>
   window.CUMU_BASE      = <?php echo json_encode($b); ?>;
   window.CUMU_ADMIN     = <?php echo $isAdmin; ?>;
@@ -42,7 +60,18 @@ function appClose(string $activeTab = 'home'): void {
 <script src="<?php echo $b; ?>/player.js"></script>
 </body>
 </html>
-<?php }
+<?php else: ?>
+</div><!-- /page-content -->
+</div><!-- /app-shell -->
+<script>
+  window.CUMU_BASE      = <?php echo json_encode($b); ?>;
+  window.CUMU_ADMIN     = <?php echo $isAdmin; ?>;
+  window.CUMU_PUBLISHER = <?php echo $isPub; ?>;
+</script>
+<script src="<?php echo $b; ?>/player.js"></script>
+</body>
+</html>
+<?php endif; }
 
 /* ── Bottom nav ──────────────────────────────────────────────────────────── */
 function _renderBottomNav(string $active, string $b): void { ?>
