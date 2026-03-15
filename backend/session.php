@@ -73,11 +73,35 @@ function _initSchema(PDO $db): void {
             song_id  INTEGER  NOT NULL REFERENCES songs(id)  ON DELETE CASCADE,
             played_at DATETIME DEFAULT (datetime('now'))
         );
-        CREATE INDEX IF NOT EXISTS idx_songs_artist  ON songs(artist_id);
-        CREATE INDEX IF NOT EXISTS idx_songs_album   ON songs(album_id);
-        CREATE INDEX IF NOT EXISTS idx_albums_artist ON albums(artist_id);
-        CREATE INDEX IF NOT EXISTS idx_rp_user       ON recently_played(user_id, played_at);
+        -- Audiobooks / Hörspiele
+        CREATE TABLE IF NOT EXISTS series (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            name       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+            cover      TEXT,
+            created_at DATETIME DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS audiobooks (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            series_id  INTEGER REFERENCES series(id) ON DELETE SET NULL,
+            title      TEXT    NOT NULL,
+            narrator   TEXT,
+            path       TEXT    NOT NULL UNIQUE,
+            cover      TEXT,
+            duration   INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_songs_artist   ON songs(artist_id);
+        CREATE INDEX IF NOT EXISTS idx_songs_album    ON songs(album_id);
+        CREATE INDEX IF NOT EXISTS idx_albums_artist  ON albums(artist_id);
+        CREATE INDEX IF NOT EXISTS idx_rp_user        ON recently_played(user_id, played_at);
+        CREATE INDEX IF NOT EXISTS idx_ab_series      ON audiobooks(series_id);
     ");
+    /* Add missing columns to existing DBs */
+    try { $db->exec("ALTER TABLE songs ADD COLUMN type TEXT DEFAULT 'song'"); } catch (Exception \$e) {}
+    try { $db->exec("ALTER TABLE albums ADD COLUMN genre TEXT"); } catch (Exception \$e) {}
+    try { $db->exec("ALTER TABLE albums ADD COLUMN featured INTEGER DEFAULT 0"); } catch (Exception \$e) {}
+    try { $db->exec("ALTER TABLE artists ADD COLUMN banner TEXT"); } catch (Exception \$e) {}
+    try { $db->exec("ALTER TABLE playlists ADD COLUMN is_favorite INTEGER DEFAULT 0"); } catch (Exception \$e) {}
     /* Migrate existing 'user' role to 'listener' */
     $db->exec("UPDATE users SET role='listener' WHERE role='user'");
     /* Migrate existing 'admin' stays admin, add publisher if missing */

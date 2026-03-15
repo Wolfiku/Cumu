@@ -160,5 +160,62 @@ switch ($action) {
         } catch (Exception $e) { if($db->inTransaction())$db->rollBack(); jsonErr('DB error: '.$e->getMessage()); }
     }
 
-    default: jsonErr('Unknown action.');
+    /* ── Search songs ─────────────────────────────────────────────────────── */
+    case 'search_songs': {
+        $q = '%' . trim($post['q'] ?? '') . '%';
+        $res = $db->prepare('SELECT s.id,s.title,a.name AS artist,al.cover FROM songs s LEFT JOIN artists a ON a.id=s.artist_id LEFT JOIN albums al ON al.id=s.album_id WHERE s.title LIKE ? OR a.name LIKE ? ORDER BY s.title LIMIT 20');
+        $res->execute([$q,$q]); jsonOk($res->fetchAll());
+    }
+    /* ── Search albums ─────────────────────────────────────────────────────── */
+    case 'search_albums': {
+        $q = '%' . trim($post['q'] ?? '') . '%';
+        $res = $db->prepare('SELECT al.id,al.name,al.cover,al.genre,al.year,a.name AS artist,a.id AS artist_id FROM albums al LEFT JOIN artists a ON a.id=al.artist_id WHERE al.name LIKE ? OR a.name LIKE ? ORDER BY al.name LIMIT 20');
+        $res->execute([$q,$q]); jsonOk($res->fetchAll());
+    }
+    /* ── Search artists ────────────────────────────────────────────────────── */
+    case 'search_artists': {
+        $q = '%' . trim($post['q'] ?? '') . '%';
+        $res = $db->prepare('SELECT id,name,image,banner FROM artists WHERE name LIKE ? ORDER BY name LIMIT 20');
+        $res->execute([$q]); jsonOk($res->fetchAll());
+    }
+    /* ── Search audiobooks ─────────────────────────────────────────────────── */
+    case 'search_audiobooks': {
+        $q = '%' . trim($post['q'] ?? '') . '%';
+        $res = $db->prepare('SELECT ab.id,ab.title,ab.cover,ab.narrator,s.name AS series FROM audiobooks ab LEFT JOIN series s ON s.id=ab.series_id WHERE ab.title LIKE ? OR s.name LIKE ? ORDER BY ab.title LIMIT 20');
+        $res->execute([$q,$q]); jsonOk($res->fetchAll());
+    }
+    /* ── Get audiobook ─────────────────────────────────────────────────────── */
+    case 'get_audiobook': {
+        $abid = (int)($post['audiobook_id'] ?? 0);
+        if (!$abid) jsonErr('audiobook_id required.');
+        $res = $db->prepare('SELECT ab.*,s.name AS series FROM audiobooks ab LEFT JOIN series s ON s.id=ab.series_id WHERE ab.id=? LIMIT 1');
+        $res->execute([$abid]); $row=$res->fetch();
+        if (!$row) jsonErr('Not found.',404);
+        jsonOk($row);
+    }
+    /* ── Update audiobook ──────────────────────────────────────────────────── */
+    case 'update_audiobook': {
+        if (!isAdmin()) jsonErr('Admin only.',403);
+        $abid     = (int)($post['audiobook_id'] ?? 0);
+        $title    = trim($post['title']    ?? '');
+        $seriesNm = trim($post['series']   ?? '');
+        $narrator = trim($post['narrator'] ?? '');
+        if (!$abid||!$title) jsonErr('audiobook_id and title required.');
+        $coverPath = saveUploadedImage('cover');
+        $db->beginTransaction();
+        try {
+            $seriesId = null;
+            if ($seriesNm !== '') {
+                $db->prepare('INSERT OR IGNORE INTO series(name) VALUES(?)')->execute([$seriesNm]);
+                $sr=$db->prepare('SELECT id FROM series WHERE name=? LIMIT 1');$sr->execute([$seriesNm]);$seriesId=(int)$sr->fetchColumn();
+            }
+            $db->prepare('UPDATE audiobooks SET title=?,series_id=?,narrator=? WHERE id=?')->execute([$title,$seriesId,$narrator,$abid]);
+            if ($coverPath) $db->prepare('UPDATE audiobooks SET cover=? WHERE id=?')->execute([$coverPath,$abid]);
+            $db->commit();
+            $res=$db->prepare('SELECT ab.*,s.name AS series FROM audiobooks ab LEFT JOIN series s ON s.id=ab.series_id WHERE ab.id=? LIMIT 1');$res->execute([$abid]);
+            jsonOk($res->fetch());
+        } catch(Exception $e){ if($db->inTransaction())$db->rollBack(); jsonErr('DB error: '.$e->getMessage()); }
+    }
+
+        default: jsonErr('Unknown action.');
 }
