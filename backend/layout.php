@@ -23,7 +23,7 @@ function appOpen(string $title): void {
 <body>
 <script>window.CUMU_BASE=<?php echo json_encode($b); ?>;</script>
 <div class="app-shell">
-<div class="page-content page-enter" id="page-content">
+<div class="page-content page-enter" id="page-content" style="padding-bottom:16px">
 <?php }
 
 function appClose(string $activeTab = 'home'): void {
@@ -32,13 +32,8 @@ function appClose(string $activeTab = 'home'): void {
     $isPub    = isPublisher() ? 'true' : 'false';
 ?>
 </div><!-- /page-content -->
-<?php _renderBottomNav($activeTab, $b); ?>
 </div><!-- /app-shell -->
 
-<?php _renderFullscreenPlayer($b); ?>
-<?php _renderSongSheet($b); ?>
-
-<audio id="c-audio" preload="none"></audio>
 <script>
   window.CUMU_BASE      = <?php echo json_encode($b); ?>;
   window.CUMU_ADMIN     = <?php echo $isAdmin; ?>;
