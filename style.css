@@ -340,3 +340,80 @@ input[type="search"]:focus,select:focus,textarea:focus{
   .sheet{max-width:480px;left:50%;transform:translateX(-50%) translateY(100%)}
   .sheet-overlay.open .sheet{transform:translateX(-50%) translateY(0)}
 }
+
+/* ── Page enter animation ───────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.page-enter { animation: fadeSlideUp .28s cubic-bezier(.4,0,.2,1) both; }
+/* stagger children on home */
+.page-enter .section-label   { animation: fadeSlideUp .3s .05s cubic-bezier(.4,0,.2,1) both; }
+.page-enter .r-card           { animation: fadeSlideUp .3s .08s cubic-bezier(.4,0,.2,1) both; }
+.page-enter .song-row         { animation: fadeSlideUp .25s .1s  cubic-bezier(.4,0,.2,1) both; }
+
+/* ── FP info row (title + heart) ────────────────── */
+.fp-info { padding:10px 24px 0; display:flex; align-items:flex-start; gap:10px; }
+.fp-info-text { flex:1; min-width:0; }
+.fp-title { font-size:21px; font-weight:800; letter-spacing:-.5px; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fp-artist-btn {
+  background:none; border:none; cursor:pointer; font-size:15px; color:var(--t2);
+  margin-top:5px; padding:0; text-align:left; font-family:var(--font); font-weight:500;
+  transition:color .12s; display:block; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; max-width:100%; -webkit-tap-highlight-color:transparent;
+}
+.fp-artist-btn:active { color:var(--t1); }
+
+/* Heart button */
+.fp-heart-btn {
+  width:44px; height:44px; flex-shrink:0;
+  background:none; border:none; cursor:pointer; color:var(--t2);
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%; transition:color .15s, transform .15s;
+  -webkit-tap-highlight-color:transparent; margin-top:2px;
+}
+.fp-heart-btn svg { display:block; pointer-events:none; }
+.fp-heart-btn:active { transform:scale(.88); }
+.fp-heart-btn.faved { color:var(--accent); }
+
+/* Header icon buttons (down chevron + 3-dot) */
+.fp-icon-btn {
+  width:40px; height:40px; flex-shrink:0;
+  background:none; border:none; cursor:pointer; color:var(--t2);
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%; transition:color .12s, background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.fp-icon-btn svg { display:block; pointer-events:none; }
+.fp-icon-btn:active { color:var(--t1); background:rgba(255,255,255,.08); }
+
+/* FP controls spacing */
+.fp-controls { display:flex; align-items:center; justify-content:space-between; padding:16px 24px 0; }
+.fp-ctrl {
+  width:52px; height:52px; background:none; border:none; cursor:pointer;
+  color:var(--t2); display:flex; align-items:center; justify-content:center;
+  border-radius:50%; transition:color .12s; -webkit-tap-highlight-color:transparent;
+}
+.fp-ctrl svg { display:block; pointer-events:none; }
+.fp-ctrl:active { color:var(--t1); background:rgba(255,255,255,.07); }
+.fp-play {
+  width:72px; height:72px; background:var(--accent); border:none; border-radius:50%;
+  cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center;
+  transition:transform .12s, background .12s; -webkit-tap-highlight-color:transparent;
+  box-shadow:0 6px 28px var(--accent-glow);
+}
+.fp-play svg { display:block; pointer-events:none; }
+.fp-play:active { transform:scale(.9); background:var(--accent-dim); }
+
+/* Upload tab bar (fixed) */
+.tab-bar { display:flex; gap:4px; padding:10px 16px; border-bottom:1px solid var(--border); background:rgba(17,17,19,.97); backdrop-filter:blur(12px); }
+.tab-btn { flex:1; padding:9px 8px; border:none; border-radius:var(--r); font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--tf); transition:background .12s,color .12s; -webkit-tap-highlight-color:transparent; text-align:center; }
+.tab-btn.active { background:var(--accent-soft); color:var(--accent); }
+.tab-btn:active { opacity:.7; }
+.tab-pane { display:none; padding:20px 16px; }
+.tab-pane.active { display:block; animation:fadeSlideUp .22s cubic-bezier(.4,0,.2,1) both; }
+
+/* Mini play button – accent colored */
+.mini-play { background:var(--accent) !important; box-shadow:0 2px 10px var(--accent-glow); }
+.mini-play:active { background:var(--accent-dim) !important; }
