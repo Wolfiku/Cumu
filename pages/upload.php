@@ -438,4 +438,58 @@ document.getElementById('al-save-btn').addEventListener('click', function() {
   fd.append('year',     document.getElementById('al-year').value);
   fd.append('featured', document.getElementById('al-featured').checked ? '1' : '0');
   var cover = document.getElementById('al-cover-input').files[0];
-  if (cover) fd.append('cover', cover)
+  if (cover) fd.append('cover', cover);
+
+  fetch(BASE + '/backend/meta_api.php', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var msg = document.getElementById('al-msg');
+      if (d.ok) { msg.innerHTML = '<div class="alert alert-success">Saved!</div>'; }
+      else       { msg.innerHTML = '<div class="alert alert-error">' + d.error + '</div>'; }
+      btn.textContent = 'Save Album'; btn.disabled = false;
+    });
+});
+
+/* ── Artist editor ────────────────────────────────── */
+document.getElementById('ar-select').addEventListener('change', function() {
+  var id = this.value;
+  if (!id) { document.getElementById('ar-editor').style.display = 'none'; return; }
+  fetch(BASE + '/backend/meta_api.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'get_artist', artist_id: parseInt(id) })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d.ok) return;
+    var ar = d.data;
+    document.getElementById('ar-name').value = ar.name || '';
+    if (ar.image) document.getElementById('ar-img-preview').innerHTML = '<img src="' + BASE + '/' + ar.image + '" alt="">';
+    if (ar.banner) document.getElementById('ar-banner-preview').innerHTML = '<img src="' + BASE + '/' + ar.banner + '" alt="">';
+    document.getElementById('ar-editor').style.display = 'block';
+  });
+});
+
+document.getElementById('ar-save-btn').addEventListener('click', function() {
+  var id = document.getElementById('ar-select').value;
+  if (!id) return;
+  var btn = this; btn.textContent = 'Saving…'; btn.disabled = true;
+  var fd = new FormData();
+  fd.append('action',    'update_artist');
+  fd.append('artist_id', id);
+  fd.append('name',      document.getElementById('ar-name').value.trim());
+  var img    = document.getElementById('ar-img-input').files[0];
+  var banner = document.getElementById('ar-banner-input').files[0];
+  if (img)    fd.append('image',  img);
+  if (banner) fd.append('banner', banner);
+
+  fetch(BASE + '/backend/meta_api.php', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var msg = document.getElementById('ar-msg');
+      if (d.ok) { msg.innerHTML = '<div class="alert alert-success">Saved!</div>'; }
+      else       { msg.innerHTML = '<div class="alert alert-error">' + d.error + '</div>'; }
+      btn.textContent = 'Save Artist'; btn.disabled = false;
+    });
+});
+</script>
+
+<?php adminFoot(); ?>
