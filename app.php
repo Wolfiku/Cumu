@@ -28,7 +28,8 @@ if (!in_array($pageBase, $allowed, true)) {
   $page = 'pages/home.php';
 }
 
-$iframeUrl = $b . '/' . htmlspecialchars($page, ENT_QUOTES, 'UTF-8');
+$sep = strpos($page, '?') !== false ? '&' : '?';
+$iframeUrl = $b . '/' . htmlspecialchars($page, ENT_QUOTES, 'UTF-8') . $sep . 'frame=1';
 $isAdmin   = isAdmin()     ? 'true' : 'false';
 $isPub     = isPublisher() ? 'true' : 'false';
 ?>
@@ -278,7 +279,8 @@ var curPage  = <?= json_encode($pageBase) ?>;
 
 function navTo(page, query) {
   var url = window.CUMU_BASE + '/' + page + (query ? '?' + query : '');
-  frame.src = url;
+  var sep = url.indexOf('?') >= 0 ? '&' : '?';
+  frame.src = url + sep + 'frame=1';
   curPage = page;
   updateTabActive(page);
   // tell the iframe about the shell (for playAt calls)

@@ -1,9 +1,12 @@
 Options -Indexes
+
 <IfModule mod_headers.c>
-    Header always set X-Frame-Options "DENY"
+    # SAMEORIGIN allows iframes from the same domain (needed for app.php shell)
+    Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-Content-Type-Options "nosniff"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
+
 <FilesMatch "\.(db|sqlite|sqlite3)$">
     Require all denied
 </FilesMatch>
