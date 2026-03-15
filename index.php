@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/backend/session.php';
 if (!isSetupDone()) { header('Location: ' . BASE_URL . '/setup.php'); exit; }
-if (isLoggedIn())   { header('Location: ' . BASE_URL . '/pages/home.php'); exit; }
+if (isLoggedIn())   { header('Location: ' . BASE_URL . '/app.php'); exit; }
 $error = $_SESSION['flash_error'] ?? null; unset($_SESSION['flash_error']);
 $b = BASE_URL;
 ?>
