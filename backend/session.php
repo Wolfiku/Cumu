@@ -93,8 +93,22 @@ function isSetupDone(): bool {
     try { return (int)getDB()->query("SELECT COUNT(*) FROM users WHERE role='admin'")->fetchColumn() > 0; }
     catch (Exception $e) { return false; }
 }
+function _iframeRedirect(string $url): void {
+    echo '<!DOCTYPE html><html><head><script>';
+    echo 'if(window.parent!==window){window.parent.location.href=' . json_encode($url) . ';}';
+    echo 'else{window.location.href=' . json_encode($url) . ';}';
+    echo '</script></head><body></body></html>';
+    exit;
+}
 function requireSetup(): void {
-    if (!isSetupDone()) { header('Location:' . BASE_URL . '/setup.php'); exit; }
+    if (!isSetupDone()) {
+        $target = BASE_URL . '/setup.php';
+        echo '<!DOCTYPE html><html><head><script>';
+        echo 'if(window.parent!==window){window.parent.location.href=' . json_encode($target) . ';}';
+        echo 'else{window.location.href=' . json_encode($target) . ';}';
+        echo '</script></head><body></body></html>';
+        exit;
+    }
 }
 function isLoggedIn(): bool   { return !empty($_SESSION['user_id']); }
 function currentRole(): string { return $_SESSION['role'] ?? ''; }
@@ -105,7 +119,7 @@ function currentUserId(): ?int   { return isset($_SESSION['user_id']) ? (int)$_S
 function currentUsername(): ?string { return $_SESSION['username'] ?? null; }
 function requireLogin(): void {
     requireSetup();
-    if (!isLoggedIn()) { header('Location:' . BASE_URL . '/index.php'); exit; }
+    if (!isLoggedIn()) { _iframeRedirect(BASE_URL . '/index.php'); }
 }
 function requireAdmin(): void {
     requireLogin();
