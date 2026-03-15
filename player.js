@@ -120,6 +120,21 @@
       });
     });
 
+    // Audiobook rows
+    document.querySelectorAll('.ab-row[data-ab-id]').forEach(function(row){
+      row.addEventListener('click', function(e){
+        if(e.target.closest('.sr-action')) return;
+        send({type:'play_audiobook', ab:{
+          id:       row.dataset.abId,
+          stream:   row.dataset.stream,
+          title:    row.dataset.title,
+          series:   row.dataset.series||'',
+          cover:    row.dataset.cover||'',
+          artistId: ''
+        }});
+      });
+    });
+
     // Search input (stays in iframe, no shell needed)
 
     // Tell shell which tab is active

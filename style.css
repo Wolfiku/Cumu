@@ -440,3 +440,15 @@ html, body { height: 100%; }
 .page-enter .section-label { animation: fadeSlideUp .3s .04s cubic-bezier(.4,0,.2,1) both; }
 .page-enter .song-row      { animation: fadeSlideUp .25s .06s cubic-bezier(.4,0,.2,1) both; }
 .page-enter .r-card        { animation: fadeSlideUp .28s .05s cubic-bezier(.4,0,.2,1) both; }
+
+/* ── Audiobook row ─────────────────────────────────────────────────────── */
+.ab-row {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 16px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  border-radius:var(--r); transition:background .1s;
+  position:relative;
+}
+.ab-row:active { background:var(--bg-card); }
+.ab-row.playing { background:var(--bg-card); }
+.ab-row.playing .sr-title { color:var(--accent); }
