@@ -1,9 +1,5 @@
-/**
- * CUMU – shell_player.js  v4
- * Persistent audio shell. Handles two modes:
- *   'music'    – normal player (prev/next, heart, artist link)
- *   'audiobook' – ±15s skip, no heart, no prev/next, no artist link
- */
+/* behebe Gecko fehler */
+
 window.ShellPlayer = (function(){
 
   /* ── State ──────────────────────────────────────── */
@@ -33,18 +29,13 @@ window.ShellPlayer = (function(){
     FWD15   :'<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.5"/><text x="8" y="16" font-size="5" fill="currentColor" stroke="none" font-family="Arial" font-weight="700">15</text></svg>',
   };
 
-  /* ── Icon helpers ────────────────────────────────── */
+  /* ── Icond ────────────────────────────────── */
   function setPlayIcons(playing){
     $id('fp-play-btn') && ($id('fp-play-btn').innerHTML = playing ? IC.PAUSE_LG : IC.PLAY_LG);
     document.querySelectorAll('.mini-play').forEach(function(b){ b.innerHTML = playing ? IC.PAUSE_SM : IC.PLAY_SM; });
   }
 
-  /* ════════════════════════════════════════════════
-     MODE SWITCHING
-     The fullscreen player has two layouts:
-     - Music:     prev | play | next   + heart + artist
-     - Audiobook: -15s | play | +15s   (no heart, no artist)
-  ════════════════════════════════════════════════ */
+  /* MODE SWITCHING ( fixe later ( fehler wenn Gecko browsers ) */
   function setMode(m){
     mode = m;
     var prevBtn   = $id('fp-prev');
@@ -90,9 +81,6 @@ window.ShellPlayer = (function(){
     }
   }
 
-  /* ════════════════════════════════════════════════
-     UPDATE UI
-  ════════════════════════════════════════════════ */
   function updateUI(item){
     if (!item) return;
     var fpT  = $id('fp-title');
@@ -131,7 +119,7 @@ window.ShellPlayer = (function(){
     }
   }
 
-  /* ── Progress ────────────────────────────────────── */
+  /* Progress tracking*/
   function tick(){
     var el = audio(); if (!el) return;
     var c = el.currentTime, d = el.duration||0, p = d>0 ? c/d*100 : 0;
@@ -141,9 +129,7 @@ window.ShellPlayer = (function(){
     var td=$id('fp-dur');     if(td) td.textContent = fmt(d);
   }
 
-  /* ════════════════════════════════════════════════
-     MUSIC PLAYBACK
-  ════════════════════════════════════════════════ */
+  /* PLAYBACK*/
   function playMusic(newQueue, startIdx){
     queue = newQueue;
     cur   = (typeof startIdx === 'number') ? startIdx : 0;
@@ -165,9 +151,7 @@ window.ShellPlayer = (function(){
     if (art){ art.classList.remove('playing'); requestAnimationFrame(function(){ art.classList.add('playing'); }); }
   }
 
-  /* ════════════════════════════════════════════════
-     AUDIOBOOK PLAYBACK
-  ════════════════════════════════════════════════ */
+  /* AUDIOBOOK PLAYBACK */
   function playAudiobook(ab){
     curAb = ab;
     setMode('audiobook');
@@ -206,18 +190,11 @@ window.ShellPlayer = (function(){
       if (cur < queue.length-1) _playAt(cur+1);
     }
   }
-
-  /* ════════════════════════════════════════════════
-     FULLSCREEN
-  ════════════════════════════════════════════════ */
+  
   var _touchStartY=0, _touchMoved=false;
 
   function openFP(){  var f=$id('fp'); if(f){ f.classList.add('open');  document.body.style.overflow='hidden'; } }
   function closeFP(){ var f=$id('fp'); if(f){ f.classList.remove('open'); document.body.style.overflow=''; } }
-
-  /* ════════════════════════════════════════════════
-     SHEETS
-  ════════════════════════════════════════════════ */
   function openSongSheet(data){
     sheetSong = data;
     var sc=$id('ss-cover');
@@ -262,9 +239,8 @@ window.ShellPlayer = (function(){
   }
   function closePlSheet(){ var o=$id('pl-sheet'); if(o) o.classList.remove('open'); }
 
-  /* ════════════════════════════════════════════════
-     FAVORITES  (music only)
-  ════════════════════════════════════════════════ */
+  /*
+     FAVORITES  */
   function getFavPlId(cb){
     if(favPlId!==null){ cb(favPlId); return; }
     fetch(B()+'/backend/playlist_api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_or_create_favorites'})})
@@ -289,9 +265,7 @@ window.ShellPlayer = (function(){
     });
   }
 
-  /* ════════════════════════════════════════════════
-     SWIPE
-  ════════════════════════════════════════════════ */
+  /* SWIPE andere seiten */
   function bindSwipe(){
     var fp=$id('fp'); if(!fp) return;
     var startY=0, moved=0;
@@ -300,9 +274,7 @@ window.ShellPlayer = (function(){
     fp.addEventListener('touchend',  function(){ fp.style.transition=''; if(moved>120){closeFP();fp.style.transform='';}else{fp.style.transform='';} });
   }
 
-  /* ════════════════════════════════════════════════
-     INIT
-  ════════════════════════════════════════════════ */
+  /* INIT*/
   function init(){
     var el=audio();
     bindSwipe();
