@@ -1,14 +1,5 @@
 <?php
-/**
- * CUMU – app.php
- * The persistent shell. Audio + player live HERE forever.
- * All page content loads in an iframe — navigation never
- * destroys the audio element.
- *
- * URL scheme:  /app.php?p=pages/home.php
- *              /app.php?p=pages/search.php
- * Default:     home.php
- */
+
 require_once __DIR__ . '/backend/session.php';
 requireLogin();
 
