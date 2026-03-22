@@ -367,7 +367,7 @@ window.ShellPlayer = (function(){
     /* ════════════════════════════════════════════════
      MIXTAPE SHEET
   ════════════════════════════════════════════════ */
-  function openMxSheet(songId){
+                        function openMxSheet(songId){
     var o=$id('mx-sheet'), list=$id('mx-sheet-list');
     if(!o||!list) return;
     list.innerHTML='<div style="padding:16px;text-align:center;color:var(--tf)">Loading…</div>';
