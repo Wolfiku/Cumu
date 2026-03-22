@@ -1,5 +1,14 @@
 <?php
-
+/**
+ * CUMU – app.php
+ * The persistent shell. Audio + player live HERE forever.
+ * All page content loads in an iframe — navigation never
+ * destroys the audio element.
+ *
+ * URL scheme:  /app.php?p=pages/home.php
+ *              /app.php?p=pages/search.php
+ * Default:     home.php
+ */
 require_once __DIR__ . '/backend/session.php';
 requireLogin();
 
@@ -32,8 +41,10 @@ $isPub     = isPublisher() ? 'true' : 'false';
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Cumu</title>
+  <link rel="icon" type="image/x-icon" href="<?= $b ?>/assets/logo/favicon.ico">
   <link rel="stylesheet" href="<?= $b ?>/style.css">
   <link rel="stylesheet" href="<?= $b ?>/player.css">
+  <link rel="stylesheet" href="<?= $b ?>/cassette.css">
   <style>
     html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); }
     .shell { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
@@ -147,7 +158,7 @@ $isPub     = isPublisher() ? 'true' : 'false';
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </button>
-      <span class="fp-label">Now Playing</span>
+      <span class="fp-label" id="fp-label">Now Playing</span>
       <button class="fp-icon-btn" id="fp-more-btn">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="12" cy="5" r="2"/>
@@ -305,6 +316,7 @@ window.addEventListener('message', function(e){
   var d = e.data;
   if (d.type === 'navigate')      { navTo(d.page, d.query || ''); }
   if (d.type === 'play')          { window.ShellPlayer && window.ShellPlayer.receiveQueue(d.queue, d.idx); }
+  if (d.type === 'play_mixtape') { window.ShellPlayer && window.ShellPlayer.playMixtape(d.queue, d.idx, d.mixtape); }
   if (d.type === 'openSongSheet') { window.ShellPlayer && window.ShellPlayer.openSongSheetPublic && window.ShellPlayer.openSongSheetPublic(d.data); }
   if (d.type === 'setTab')        { updateTabActive(d.page.replace(/\?.*$/,'')); }
 });
