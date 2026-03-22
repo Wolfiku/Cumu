@@ -18,11 +18,14 @@ $playlists = $pls->fetchAll();
 // Default cover for unknowns
 $defaultCover = $b . '/assets/covers/favourite.png';
 
-// Fetch user mixtapes
-$mxs = $db->prepare('SELECT m.*, COUNT(ms.song_id) AS song_count
-    FROM mixtapes m LEFT JOIN mixtape_songs ms ON ms.mixtape_id=m.id
-    WHERE m.user_id=? GROUP BY m.id ORDER BY m.created_at DESC');
-$mxs->execute([$uid]); $mixtapes = $mxs->fetchAll();
+// Fetch all mixtapes (visible to everyone, managed by publishers/admins)
+$mxs = $db->query('SELECT m.id, m.name, m.creator_id, u.username AS creator,
+    COUNT(ms.song_id) AS song_count
+    FROM mixtapes m
+    LEFT JOIN users u ON u.id=m.creator_id
+    LEFT JOIN mixtape_songs ms ON ms.mixtape_id=m.id
+    GROUP BY m.id ORDER BY m.created_at DESC');
+$mixtapes = $mxs->fetchAll();
 
 appOpen('Library');
 ?>
@@ -252,21 +255,25 @@ function $id(id){ return document.getElementById(id); }
         <div class="lib-item-name">📼 <?= h($mx['name']) ?></div>
         <div class="lib-item-sub">Mixtape · <?= (int)$mx['song_count'] ?> song<?= $mx['song_count'] != 1 ? 's' : '' ?></div>
       </div>
-      <button class="sr-action" id="del-mx-<?= (int)$mx['id'] ?>" data-mxid="<?= (int)$mx['id'] ?>" title="Delete mixtape" style="flex-shrink:0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      </button>
+      <?php if (isPublisher() && ($mx['creator_id'] === $uid || isAdmin())): ?>
+        <button class="sr-action" id="del-mx-<?= (int)$mx['id'] ?>" data-mxid="<?= (int)$mx['id'] ?>" title="Delete mixtape" style="flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      <?php endif; ?>
     </div>
   <?php endforeach; ?>
 </div>
 <?php endif; ?>
 
-<!-- New Mixtape button -->
+<?php if (isPublisher()): ?>
+<!-- New Mixtape button — publishers/admins only -->
 <div style="padding:12px 16px 0">
   <button id="new-mx-btn" class="btn btn-secondary" style="width:auto;border-radius:10px;font-size:13px;padding:9px 18px;display:inline-flex;gap:8px;align-items:center">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     New Mixtape
   </button>
 </div>
+<?php endif; ?>
 
 <script>
 // Delete mixtape
@@ -281,14 +288,15 @@ document.querySelectorAll('[id^="del-mx-"]').forEach(function(btn){
   });
 });
 
-// New Mixtape
-document.getElementById('new-mx-btn').addEventListener('click', async function(){
-  var name = prompt('Mixtape name:');
-  if (!name || !name.trim()) return;
-  var r = await fetch(window.CUMU_BASE+'/backend/mixtape_api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',name:name.trim()})});
-  var d = await r.json();
-  if (d.ok) window.navigate('pages/mixtape.php','id='+d.data.id);
-});
+if (document.getElementById('new-mx-btn')) {
+  document.getElementById('new-mx-btn').addEventListener('click', async function(){
+    var name = prompt('Mixtape name:');
+    if (!name || !name.trim()) return;
+    var r = await fetch(window.CUMU_BASE+'/backend/mixtape_api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',name:name.trim()})});
+    var d = await r.json();
+    if (d.ok) window.navigate('pages/mixtape.php','id='+d.data.id);
+  });
+}
 </script>
 
 <?php appClose('library'); ?>
