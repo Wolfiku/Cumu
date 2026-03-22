@@ -27,6 +27,7 @@ function _initSchema(PDO $db): void {
             username      TEXT     NOT NULL UNIQUE COLLATE NOCASE,
             password_hash TEXT     NOT NULL,
             role          TEXT     NOT NULL DEFAULT 'listener',
+            profile_image TEXT,
             created_at    DATETIME DEFAULT (datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
@@ -57,6 +58,9 @@ function _initSchema(PDO $db): void {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             name TEXT NOT NULL,
+            description TEXT,
+            cover TEXT,
+            is_favorite INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT (datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS playlist_songs (
@@ -95,13 +99,33 @@ function _initSchema(PDO $db): void {
         CREATE INDEX IF NOT EXISTS idx_albums_artist  ON albums(artist_id);
         CREATE INDEX IF NOT EXISTS idx_rp_user        ON recently_played(user_id, played_at);
         CREATE INDEX IF NOT EXISTS idx_ab_series      ON audiobooks(series_id);
+        -- Mixtapes
+        CREATE TABLE IF NOT EXISTS mixtapes (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name       TEXT    NOT NULL,
+            created_at DATETIME DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS mixtape_songs (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            mixtape_id  INTEGER NOT NULL REFERENCES mixtapes(id)  ON DELETE CASCADE,
+            song_id     INTEGER NOT NULL REFERENCES songs(id)     ON DELETE CASCADE,
+            position    INTEGER NOT NULL DEFAULT 0,
+            added_at    DATETIME DEFAULT (datetime('now')),
+            UNIQUE(mixtape_id, song_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_mx_user ON mixtapes(user_id);
+        CREATE INDEX IF NOT EXISTS idx_mxs_mt  ON mixtape_songs(mixtape_id);
     ");
     /* Add missing columns to existing DBs */
-    try { $db->exec("ALTER TABLE songs ADD COLUMN type TEXT DEFAULT 'song'"); } catch (Exception \$e) {}
-    try { $db->exec("ALTER TABLE albums ADD COLUMN genre TEXT"); } catch (Exception \$e) {}
-    try { $db->exec("ALTER TABLE albums ADD COLUMN featured INTEGER DEFAULT 0"); } catch (Exception \$e) {}
-    try { $db->exec("ALTER TABLE artists ADD COLUMN banner TEXT"); } catch (Exception \$e) {}
-    try { $db->exec("ALTER TABLE playlists ADD COLUMN is_favorite INTEGER DEFAULT 0"); } catch (Exception \$e) {}
+    try { $db->exec("ALTER TABLE songs ADD COLUMN type TEXT DEFAULT 'song'"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE albums ADD COLUMN genre TEXT"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE albums ADD COLUMN featured INTEGER DEFAULT 0"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE artists ADD COLUMN banner TEXT"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE playlists ADD COLUMN is_favorite INTEGER DEFAULT 0"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE playlists ADD COLUMN cover TEXT"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE playlists ADD COLUMN description TEXT"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE users ADD COLUMN profile_image TEXT"); } catch (Exception $e) {}
     /* Migrate existing 'user' role to 'listener' */
     $db->exec("UPDATE users SET role='listener' WHERE role='user'");
     /* Migrate existing 'admin' stays admin, add publisher if missing */

@@ -18,6 +18,7 @@ function appOpen(string $title): void {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title><?php echo h($title); ?> – Cumu</title>
+  <link rel="icon" type="image/x-icon" href="<?php echo $b; ?>/assets/logo/favicon.ico">
   <link rel="stylesheet" href="<?php echo $b; ?>/style.css">
   <style>
     html,body{height:100%;overflow-x:hidden;background:var(--bg);margin:0}
@@ -36,6 +37,7 @@ function appOpen(string $title): void {
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title><?php echo h($title); ?> – Cumu</title>
+  <link rel="icon" type="image/x-icon" href="<?php echo $b; ?>/assets/logo/favicon.ico">
   <link rel="stylesheet" href="<?php echo $b; ?>/style.css">
   <link rel="stylesheet" href="<?php echo $b; ?>/player.css">
 </head>
@@ -348,6 +350,7 @@ function adminHead(string $title, string $active = ''): void {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?php echo h($title); ?> – Cumu Admin</title>
+  <link rel="icon" type="image/x-icon" href="<?php echo $b; ?>/assets/logo/favicon.ico">
   <link rel="stylesheet" href="<?php echo $b; ?>/style.css">
 </head>
 <body>
