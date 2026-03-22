@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 /**
  * CUMU – backend/upload_api.php
  * Handles single, album, and audiobook uploads.

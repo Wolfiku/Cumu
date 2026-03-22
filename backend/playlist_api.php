@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 /**
  * CUMU – backend/playlist_api.php
  * Playlist management + favorites support.
@@ -20,7 +22,7 @@ switch ($action) {
 
   /* ── List user playlists ─────────────────────────────────────────────── */
   case 'list_user': {
-    $s = $db->prepare('SELECT id, name, cover, is_favorite FROM playlists WHERE user_id=? ORDER BY is_favorite DESC, name ASC');
+    $s = $db->prepare('SELECT id, name, description, cover, is_favorite FROM playlists WHERE user_id=? ORDER BY is_favorite DESC, name ASC');
     $s->execute([$uid]);
     jsonOk($s->fetchAll());
   }
@@ -28,9 +30,10 @@ switch ($action) {
   /* ── Create playlist ─────────────────────────────────────────────────── */
   case 'create_playlist': {
     $name = trim($post['name'] ?? '');
+    $desc = trim($post['description'] ?? '');
     if ($name === '')         jsonErr('Name is required.');
     if (strlen($name) > 100) jsonErr('Name too long.');
-    $db->prepare('INSERT INTO playlists(user_id,name) VALUES(?,?)')->execute([$uid, $name]);
+    $db->prepare('INSERT INTO playlists(user_id,name,description) VALUES(?,?,?)')->execute([$uid, $name, $desc ?: null]);
     $id = (int)$db->lastInsertId();
     jsonOk(['id' => $id, 'name' => $name]);
   }
@@ -41,8 +44,9 @@ switch ($action) {
     $s->execute([$uid]);
     $fav = $s->fetch();
     if (!$fav) {
-      $db->prepare('INSERT INTO playlists(user_id,name,is_favorite) VALUES(?,?,1)')->execute([$uid, 'Favorites']);
-      $fav = ['id' => (int)$db->lastInsertId(), 'name' => 'Favorites'];
+      $favCover = 'assets/covers/favourite.png';
+      $db->prepare('INSERT INTO playlists(user_id,name,is_favorite,cover) VALUES(?,?,1,?)')->execute([$uid, 'Favorites', $favCover]);
+      $fav = ['id' => (int)$db->lastInsertId(), 'name' => 'Favorites', 'cover' => $favCover];
     }
     jsonOk($fav);
   }
@@ -60,7 +64,53 @@ switch ($action) {
     jsonOk(['is_fav' => (bool)$chk->fetch()]);
   }
 
-  /* ── Delete playlist ─────────────────────────────────────────────────── */
+  /* ── Update playlist (name, description, cover) ────────────────────────── */
+  case 'update_playlist': {
+    $pid  = (int)($post['playlist_id'] ?? 0);
+    $name = trim($post['name'] ?? '');
+    $desc = trim($post['description'] ?? '');
+    if (!$pid) jsonErr('playlist_id required.');
+    $pl = $db->prepare('SELECT user_id, is_favorite FROM playlists WHERE id=? LIMIT 1');
+    $pl->execute([$pid]); $row = $pl->fetch();
+    if (!$row) jsonErr('Not found.', 404);
+    if ($row['user_id'] !== $uid && !isAdmin()) jsonErr('Forbidden.', 403);
+    if ($name !== '' && !$row['is_favorite']) {
+        $db->prepare('UPDATE playlists SET name=? WHERE id=?')->execute([$name, $pid]);
+    }
+    if ($desc !== '') {
+        $db->prepare('UPDATE playlists SET description=? WHERE id=?')->execute([$desc, $pid]);
+    }
+    // Cover upload handled separately via update_playlist_cover
+    $ps = $db->prepare('SELECT id,name,description,cover,is_favorite FROM playlists WHERE id=? LIMIT 1');
+    $ps->execute([$pid]); jsonOk($ps->fetch());
+  }
+
+  /* ── Update playlist cover ───────────────────────────────────────────────── */
+  case 'update_playlist_cover': {
+    $pid = (int)($post['playlist_id'] ?? $_POST['playlist_id'] ?? 0);
+    if (!$pid) jsonErr('playlist_id required.');
+    $pl = $db->prepare('SELECT user_id,is_favorite FROM playlists WHERE id=? LIMIT 1');
+    $pl->execute([$pid]); $row=$pl->fetch();
+    if (!$row) jsonErr('Not found.',404);
+    if ($row['user_id'] !== $uid && !isAdmin()) jsonErr('Forbidden.',403);
+    if ($row['is_favorite']) jsonErr('Cannot change Favorites cover.');
+    if (empty($_FILES['cover']) || $_FILES['cover']['error'] !== UPLOAD_ERR_OK) jsonErr('No cover file.');
+    $f = $_FILES['cover'];
+    if ($f['size'] > 5*1024*1024) jsonErr('Too large (max 5 MB).');
+    $info = @getimagesize($f['tmp_name']); if (!$info) jsonErr('Invalid image.');
+    $mime = $info['mime'];
+    if (!in_array($mime,['image/jpeg','image/png','image/webp'],true)) jsonErr('JPEG/PNG/WebP only.');
+    $ext  = match($mime){'image/png'=>'png','image/webp'=>'webp',default=>'jpg'};
+    if (!is_dir(COVERS_DIR)) mkdir(COVERS_DIR,0750,true);
+    $hash = md5_file($f['tmp_name']).'_pl';
+    $dst  = COVERS_DIR.'/'.$hash.'.'.$ext;
+    if (!file_exists($dst)) move_uploaded_file($f['tmp_name'],$dst);
+    $coverPath = 'covers/'.$hash.'.'.$ext;
+    $db->prepare('UPDATE playlists SET cover=? WHERE id=?')->execute([$coverPath,$pid]);
+    jsonOk(['cover' => BASE_URL.'/'.$coverPath]);
+  }
+
+    /* ── Delete playlist ─────────────────────────────────────────────────── */
   case 'delete_playlist': {
     $pid = (int)($post['playlist_id'] ?? 0);
     if (!$pid) jsonErr('playlist_id required.');

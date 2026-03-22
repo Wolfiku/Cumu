@@ -219,12 +219,14 @@ function fmtDuration(int $s): string {
     return intdiv($s, 60) . ':' . str_pad((string)($s % 60), 2, '0', STR_PAD_LEFT);
 }
 function jsonOk($d): void {
+    while (ob_get_level()) ob_end_clean();
     header('Content-Type: application/json');
     echo json_encode(['ok' => true, 'data' => $d]);
     exit;
 }
 function jsonErr(string $m, int $c = 400): void {
     http_response_code($c);
+    while (ob_get_level()) ob_end_clean();
     header('Content-Type: application/json');
     echo json_encode(['ok' => false, 'error' => $m]);
     exit;

@@ -1,4 +1,6 @@
 <?php
+ob_start();
+
 /**
  * CUMU – backend/meta_api.php
  * Admin/Publisher: edit song, album, artist metadata + covers + featured flag.

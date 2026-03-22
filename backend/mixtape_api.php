@@ -1,13 +1,13 @@
 <?php
 /**
  * CUMU – backend/mixtape_api.php
- *
- * Mixtapes are album-like collections.
- * Only publishers and admins can create / manage them.
- * All logged-in users can list and stream them.
  */
+ob_start(); // catch any stray output (warnings, notices)
 require_once __DIR__ . '/../backend/session.php';
-if (!isLoggedIn()) jsonErr('Unauthorized', 401);
+if (!isLoggedIn()) {
+    ob_end_clean();
+    jsonErr('Unauthorized', 401);
+}
 
 $body   = file_get_contents('php://input');
 $json   = json_decode($body, true);
@@ -64,12 +64,17 @@ switch ($action) {
 
   /* ── Create (publisher / admin only) ──────────────────────────────── */
   case 'create': {
+    ob_end_clean();
     if (!isPublisher()) jsonErr('Publisher or Admin required.', 403);
     $name = trim($post['name'] ?? '');
     if ($name === '')        jsonErr('Name is required.');
     if (strlen($name) > 100) jsonErr('Name too long (max 100).');
-    $db->prepare('INSERT INTO mixtapes(creator_id, name) VALUES(?,?)')->execute([$uid, $name]);
-    jsonOk(['id' => (int)$db->lastInsertId(), 'name' => $name]);
+    try {
+        $db->prepare('INSERT INTO mixtapes(creator_id, name) VALUES(?,?)')->execute([$uid, $name]);
+        jsonOk(['id' => (int)$db->lastInsertId(), 'name' => $name]);
+    } catch (Exception $e) {
+        jsonErr('DB error: ' . $e->getMessage());
+    }
   }
 
   /* ── Rename (publisher / admin only) ──────────────────────────────── */
@@ -128,5 +133,5 @@ switch ($action) {
     jsonOk(['removed' => true]);
   }
 
-  default: jsonErr('Unknown action.');
+  default: ob_end_clean(); jsonErr('Unknown action.');
 }
