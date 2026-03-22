@@ -99,12 +99,12 @@ function _initSchema(PDO $db): void {
         CREATE INDEX IF NOT EXISTS idx_albums_artist  ON albums(artist_id);
         CREATE INDEX IF NOT EXISTS idx_rp_user        ON recently_played(user_id, played_at);
         CREATE INDEX IF NOT EXISTS idx_ab_series      ON audiobooks(series_id);
-        -- Mixtapes
+        -- Mixtapes (album-like, created by publishers/admins)
         CREATE TABLE IF NOT EXISTS mixtapes (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            name       TEXT    NOT NULL,
-            created_at DATETIME DEFAULT (datetime('now'))
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            creator_id  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            name        TEXT    NOT NULL,
+            created_at  DATETIME DEFAULT (datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS mixtape_songs (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -114,8 +114,8 @@ function _initSchema(PDO $db): void {
             added_at    DATETIME DEFAULT (datetime('now')),
             UNIQUE(mixtape_id, song_id)
         );
-        CREATE INDEX IF NOT EXISTS idx_mx_user ON mixtapes(user_id);
-        CREATE INDEX IF NOT EXISTS idx_mxs_mt  ON mixtape_songs(mixtape_id);
+        CREATE INDEX IF NOT EXISTS idx_mx_creator ON mixtapes(creator_id);
+        CREATE INDEX IF NOT EXISTS idx_mxs_mt     ON mixtape_songs(mixtape_id);
     ");
     /* Add missing columns to existing DBs */
     try { $db->exec("ALTER TABLE songs ADD COLUMN type TEXT DEFAULT 'song'"); } catch (Exception $e) {}
