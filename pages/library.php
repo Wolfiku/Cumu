@@ -270,15 +270,7 @@ function $id(id){ return document.getElementById(id); }
 </div>
 <?php endif; ?>
 
-<?php if (isPublisher()): ?>
-<!-- New Mixtape button — publishers/admins only -->
-<div style="padding:12px 16px 0">
-  <button id="new-mx-btn" class="btn btn-secondary" style="width:auto;border-radius:10px;font-size:13px;padding:9px 18px;display:inline-flex;gap:8px;align-items:center">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    New Mixtape
-  </button>
-</div>
-<?php endif; ?>
+
 
 <script>
 // Delete mixtape
@@ -293,15 +285,7 @@ document.querySelectorAll('[id^="del-mx-"]').forEach(function(btn){
   });
 });
 
-if (document.getElementById('new-mx-btn')) {
-  document.getElementById('new-mx-btn').addEventListener('click', async function(){
-    var name = prompt('Mixtape name:');
-    if (!name || !name.trim()) return;
-    var r = await fetch(window.CUMU_BASE+'/backend/mixtape_api.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',name:name.trim()})});
-    var d = await r.json();
-    if (d.ok) window.navigate('pages/mixtape.php','id='+d.data.id);
-  });
-}
+
 </script>
 
 <?php appClose('library'); ?>
