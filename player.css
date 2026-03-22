@@ -226,7 +226,6 @@
   display: flex; align-items: center; justify-content: center;
   transition: transform .12s, background .12s;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 2px 12px var(--accent-glow);
   flex-shrink: 0;
 }
 .mini-play svg { display: block; pointer-events: none; }

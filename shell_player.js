@@ -321,31 +321,46 @@ window.ShellPlayer = (function(){
      CASSETTE ART (Mixtape mode)
   ════════════════════════════════════════════════ */
   function buildCassetteHTML(name, count){
-    var shortName = name.length > 28 ? name.substring(0,28)+'…' : name;
-    var labelName = name.length > 30 ? name.substring(0,30)+'…' : name;
-    return '<div class="cassette-wrap"><div class="cassette-scale"><div class="card" id="fp-cassette">'
-      +'<div class="ups"><div class="screw1">+</div><div class="screw2">+</div></div>'
-      +'<div class="card1">'
-      +'<div class="line1"></div><div class="line2"></div>'
-      +'<div class="mixtape-label-name">'+labelName+'</div>'
-      +'<div class="yl">'
-      +'<div class="roll"><div class="s_wheel"></div><div class="tape"></div><div class="e_wheel"></div></div>'
-      +'<p class="num">'+count+'</p>'
+    // Truncate for the orange bar label (max 28 chars like original "2x30min")
+    var label = name.length > 28 ? name.substring(0,27)+'…' : name;
+    // Exact HTML from Uiverse by Praashoo7
+    // "2x30min" → mixtape name  |  "90" → song count
+    return '<div class="cassette-outer">'
+      +'<div style="transform:scale(0.72);transform-origin:top center;display:inline-block">'
+      +'<div class="main">'
+      +'<div class="card" id="fp-cassette">'
+        +'<div class="ups"><div class="screw1">+</div><div class="screw2">+</div></div>'
+        +'<div class="card1">'
+          +'<div class="line1"></div>'
+          +'<div class="line2"></div>'
+          +'<div class="yl">'
+            +'<div class="roll">'
+              +'<div class="s_wheel"></div>'
+              +'<div class="tape"></div>'
+              +'<div class="e_wheel"></div>'
+            +'</div>'
+            +'<p class="num">'+count+'</p>'
+          +'</div>'
+          +'<div class="or"><p class="time">'+label+'</p></div>'
+        +'</div>'
+        +'<div class="card2_main"><div class="card2">'
+          +'<div class="c1"></div>'
+          +'<div class="t1"></div>'
+          +'<div class="screw5">+</div>'
+          +'<div class="t2"></div>'
+          +'<div class="c2"></div>'
+        +'</div></div>'
+        +'<div class="downs"><div class="screw3">+</div><div class="screw4">+</div></div>'
       +'</div>'
-      +'<div class="or"><p class="time">'+shortName+'</p></div>'
-      +'</div>'
-      +'<div class="card2_main"><div class="card2">'
-      +'<div class="c1"></div><div class="t1"></div><div class="screw5">+</div><div class="t2"></div><div class="c2"></div>'
-      +'</div></div>'
-      +'<div class="downs"><div class="screw3">+</div><div class="screw4">+</div></div>'
       +'</div></div></div>';
   }
 
   function setCassetteSpinning(playing){
     var c = document.getElementById('fp-cassette');
     if (c) {
-      if (playing) c.classList.add('cassette-spinning');
-      else         c.classList.remove('cassette-spinning');
+      // .cassette-paused sets animation-play-state:paused on wheels
+      if (playing) c.classList.remove('cassette-paused');
+      else         c.classList.add('cassette-paused');
     }
   }
 
@@ -468,9 +483,16 @@ window.ShellPlayer = (function(){
     });
 
     /* Song sheet actions */
-    $id('ss-add-mx')&&$id('ss-add-mx').addEventListener('click',function(){
-      if(sheetSong){ var sid=sheetSong.songId; closeSongSheet(); openMxSheet(sid); }
-    });
+    // Only show "Add to Mixtape" for publishers/admins
+    var ssMx=$id('ss-add-mx');
+    if(ssMx){
+      if(!window.CUMU_PUBLISHER){ ssMx.style.display='none'; }
+      else{
+        ssMx.addEventListener('click',function(){
+          if(sheetSong){ var sid=sheetSong.songId; closeSongSheet(); openMxSheet(sid); }
+        });
+      }
+    }
     var mxo=$id('mx-sheet');
     mxo&&mxo.addEventListener('click',function(e){ if(e.target===mxo) closeMxSheet(); });
     $id('mx-new-item')&&$id('mx-new-item').addEventListener('click',function(){
