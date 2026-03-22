@@ -19,13 +19,18 @@ $playlists = $pls->fetchAll();
 $defaultCover = $b . '/assets/covers/favourite.png';
 
 // Fetch all mixtapes (visible to everyone, managed by publishers/admins)
-$mxs = $db->query('SELECT m.id, m.name, m.creator_id, u.username AS creator,
-    COUNT(ms.song_id) AS song_count
-    FROM mixtapes m
-    LEFT JOIN users u ON u.id=m.creator_id
-    LEFT JOIN mixtape_songs ms ON ms.mixtape_id=m.id
-    GROUP BY m.id ORDER BY m.created_at DESC');
-$mixtapes = $mxs->fetchAll();
+// Wrapped in try/catch in case table doesn't exist yet on older installs
+try {
+    $mxs = $db->query('SELECT m.id, m.name, m.creator_id, u.username AS creator,
+        COUNT(ms.song_id) AS song_count
+        FROM mixtapes m
+        LEFT JOIN users u ON u.id=m.creator_id
+        LEFT JOIN mixtape_songs ms ON ms.mixtape_id=m.id
+        GROUP BY m.id ORDER BY m.created_at DESC');
+    $mixtapes = $mxs->fetchAll();
+} catch (Exception $e) {
+    $mixtapes = [];
+}
 
 appOpen('Library');
 ?>

@@ -63,6 +63,7 @@ adminHead('Upload', 'upload');
     <button class="upload-tab active" data-tab="single">Single</button>
     <button class="upload-tab"        data-tab="album">Album</button>
     <button class="upload-tab"        data-tab="audio">Hörbuch / Hörspiel</button>
+    <button class="upload-tab"        data-tab="mixtape">Mixtape</button>
   </div>
 
   <!-- ══════════════════════ TAB: SINGLE ══════════════════════ -->
@@ -240,6 +241,67 @@ adminHead('Upload', 'upload');
     <div id="ab-prog-wrap" style="display:none"><div class="prog-bar"><div class="prog-fill" id="ab-prog"></div></div></div>
     <button class="btn btn-primary" id="ab-upload-btn" disabled style="opacity:.4;border-radius:10px;margin-top:16px">Upload Hörbuch</button>
     <div id="ab-results" style="margin-top:14px"></div>
+
+  </div>
+
+
+  <!-- ══════════════════════ TAB: MIXTAPE ══════════════════════ -->
+  <div class="tab-body" id="tab-mixtape" style="padding:20px">
+
+    <div class="upload-section">
+      <div class="upload-section-title">Mixtape Info</div>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.6">
+        Mixtapes sind wie Alben — du stellst sie zusammen und alle User können sie hören.
+        Erstelle zuerst das Mixtape, dann lade Tracks hoch und weise sie zu.
+      </p>
+      <div class="form-group">
+        <label>Mixtape Name</label>
+        <input type="text" id="mx-name" placeholder="Mixtape name" maxlength="100">
+      </div>
+      <button class="btn btn-primary" id="mx-create-btn" style="border-radius:10px">
+        Create Mixtape
+      </button>
+      <div id="mx-create-result" style="margin-top:12px"></div>
+    </div>
+
+    <!-- After creating, show add-songs section -->
+    <div id="mx-songs-section" style="display:none">
+      <div class="upload-section">
+        <div class="upload-section-title">Upload Tracks to Mixtape</div>
+        <div class="drop-zone" id="mx-dz">
+          <svg class="drop-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+          </svg>
+          <div class="drop-label">Drop tracks here</div>
+          <div class="drop-sub">MP3, FLAC, OGG, WAV, M4A · ID3 tags read automatically</div>
+          <label class="btn btn-secondary" style="width:auto;padding:9px 20px;font-size:13px;border-radius:8px;cursor:pointer;display:inline-flex">
+            Browse
+            <input type="file" id="mx-files" multiple accept=".mp3,.flac,.ogg,.wav,.m4a,.aac,.opus" style="display:none">
+          </label>
+        </div>
+        <div id="mx-file-list" style="margin-top:8px"></div>
+        <div id="mx-prog-wrap" style="display:none;margin-top:12px"><div class="prog-bar"><div class="prog-fill" id="mx-prog"></div></div></div>
+        <button class="btn btn-primary" id="mx-upload-btn" disabled style="opacity:.4;border-radius:10px;margin-top:14px">
+          Upload &amp; Add to Mixtape
+        </button>
+        <div id="mx-upload-result" style="margin-top:12px"></div>
+      </div>
+
+      <!-- Existing songs from library -->
+      <div class="upload-section">
+        <div class="upload-section-title">Or add existing songs</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <input type="search" id="mx-song-search" placeholder="Search songs to add…" style="flex:1;padding:10px 14px;border:1px solid var(--border-m);border-radius:10px;background:var(--bg-card);color:var(--t1);font-family:var(--font);font-size:14px;outline:none">
+        </div>
+        <div id="mx-song-results"></div>
+      </div>
+
+      <div style="margin-top:8px">
+        <a id="mx-view-link" href="#" class="btn btn-secondary" style="width:auto;border-radius:10px;font-size:13px;padding:9px 18px">
+          View Mixtape →
+        </a>
+      </div>
+    </div>
 
   </div>
 
@@ -435,6 +497,113 @@ abBtn.addEventListener('click', function() {
   doUpload(fd, 'ab-prog', 'ab-prog-wrap', 'ab-upload-btn', 'ab-results');
   abFile = null; renderPills('ab-file-list',[],function(){}); abBtn.disabled=true; abBtn.style.opacity='.4';
 });
+
+/* ── MIXTAPE ──────────────────────────────────────────────────────────────── */
+var mxId   = null;
+var mxFiles= [];
+var mxBtn  = document.getElementById('mx-upload-btn');
+
+// Create mixtape
+document.getElementById('mx-create-btn').addEventListener('click', async function(){
+  var name = document.getElementById('mx-name').value.trim();
+  if (!name) { alert('Enter a mixtape name.'); return; }
+  var btn = this; btn.textContent = 'Creating…'; btn.disabled = true;
+  var r = await fetch(BASE+'/backend/mixtape_api.php',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'create', name:name})
+  });
+  var d = await r.json();
+  btn.textContent = 'Create Mixtape'; btn.disabled = false;
+  if (d.ok) {
+    mxId = d.data.id;
+    document.getElementById('mx-create-result').innerHTML =
+      '<div class="alert alert-success">Mixtape "'+name+'" created!</div>';
+    document.getElementById('mx-songs-section').style.display = 'block';
+    document.getElementById('mx-view-link').href = BASE+'/pages/mixtape.php?id='+mxId;
+  } else {
+    document.getElementById('mx-create-result').innerHTML =
+      '<div class="alert alert-error">'+d.error+'</div>';
+  }
+});
+
+// File handling for mixtape tracks
+function addMxFiles(list){
+  var exts=['mp3','flac','ogg','wav','m4a','aac','opus'];
+  Array.prototype.forEach.call(list, function(f){
+    var ext=f.name.split('.').pop().toLowerCase();
+    if(exts.indexOf(ext)>=0 && !mxFiles.find(function(x){return x.name===f.name&&x.size===f.size;}))
+      mxFiles.push(f);
+  });
+  mxFiles.sort(function(a,b){return a.name.localeCompare(b.name);});
+  renderPills('mx-file-list', mxFiles, function(i){
+    mxFiles.splice(i,1);
+    renderPills('mx-file-list',mxFiles,arguments.callee);
+    mxBtn.disabled=!mxFiles.length; mxBtn.style.opacity=mxFiles.length?'1':'.4';
+  });
+  mxBtn.disabled=!mxFiles.length; mxBtn.style.opacity=mxFiles.length?'1':'.4';
+}
+
+bindDrop('mx-dz', addMxFiles);
+document.getElementById('mx-files').addEventListener('change', function(){ addMxFiles(this.files); });
+
+// Upload tracks and add to mixtape
+mxBtn.addEventListener('click', function(){
+  if (!mxFiles.length || !mxId) return;
+  // First upload as singles, then add each song to mixtape
+  var fd = new FormData();
+  fd.append('type','single');
+  mxFiles.forEach(function(f){ fd.append('files[]',f); });
+  fd.append('artist','Various Artists');
+  doUpload(fd,'mx-prog','mx-prog-wrap','mx-upload-btn','mx-upload-result');
+  // After upload, songs are in DB — user sees them via view mixtape link
+  // and can add via song sheet ··· → Add to Mixtape
+  mxFiles=[]; renderPills('mx-file-list',[],function(){});
+  mxBtn.disabled=true; mxBtn.style.opacity='.4';
+  setTimeout(function(){
+    document.getElementById('mx-upload-result').innerHTML +=
+      '<div style="margin-top:8px;font-size:13px;color:var(--t2)">Songs uploaded. Now use ··· on each song to add to this Mixtape, or search below.</div>';
+  }, 1500);
+});
+
+// Search existing songs to add to mixtape
+var mxSearchTimer = null;
+document.getElementById('mx-song-search').addEventListener('input', function(){
+  clearTimeout(mxSearchTimer);
+  var q = this.value.trim();
+  if (q.length < 2) { document.getElementById('mx-song-results').innerHTML=''; return; }
+  mxSearchTimer = setTimeout(async function(){
+    var r = await fetch(BASE+'/backend/meta_api.php',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'search_songs', q:q})
+    });
+    var d = await r.json();
+    if (!d.ok) return;
+    var html = '';
+    d.data.forEach(function(song){
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+song.title+'</div>'
+        +'<div style="font-size:12px;color:var(--t2)">'+song.artist+'</div></div>'
+        +'<button class="btn btn-secondary" data-sid="'+song.id+'" style="width:auto;padding:6px 14px;font-size:12px;border-radius:8px;flex-shrink:0">Add</button>'
+        +'</div>';
+    });
+    var res = document.getElementById('mx-song-results');
+    res.innerHTML = html || '<div style="font-size:13px;color:var(--tf);padding:8px 0">No results</div>';
+    res.querySelectorAll('button[data-sid]').forEach(function(btn){
+      btn.addEventListener('click', async function(){
+        if (!mxId) { alert('Create a mixtape first.'); return; }
+        btn.textContent='Adding…'; btn.disabled=true;
+        var r2 = await fetch(BASE+'/backend/mixtape_api.php',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({action:'add_song', mixtape_id:mxId, song_id:parseInt(btn.dataset.sid)})
+        });
+        var d2 = await r2.json();
+        if(d2.ok){ btn.textContent='Added ✓'; btn.style.color='var(--accent)'; }
+        else { btn.textContent='Add'; btn.disabled=false; }
+      });
+    });
+  }, 300);
+});
+
 </script>
 
 <?php adminFoot(); ?>
